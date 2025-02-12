@@ -1,0 +1,224 @@
+create database conversationalai;
+use conversationalai;
+
+CREATE TABLE Patients (
+    PatientID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Age INT CHECK (Age > 0),
+    Gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    ContactNumber VARCHAR(15) UNIQUE NOT NULL,
+    Email VARCHAR(255) UNIQUE NOT NULL,
+    Allergies TEXT  -- Can store multiple allergies as comma-separated values
+);
+CREATE TABLE Symptoms (
+    SymptomID INT AUTO_INCREMENT PRIMARY KEY,
+    SymptomName VARCHAR(100) UNIQUE NOT NULL,
+    Severity ENUM('Mild', 'Moderate', 'Severe') NOT NULL
+);
+
+CREATE TABLE Diseases (
+    DiseaseID INT AUTO_INCREMENT PRIMARY KEY,
+    DiseaseName VARCHAR(100) UNIQUE NOT NULL,
+    SymptomID INT NOT NULL,
+    Severity ENUM('Mild', 'Moderate', 'Severe') NOT NULL,
+    FOREIGN KEY (SymptomID) REFERENCES Symptoms(SymptomID) ON DELETE CASCADE
+);
+
+CREATE TABLE Medicines (
+    MedicineID INT AUTO_INCREMENT PRIMARY KEY,
+    MedicineName VARCHAR(100) UNIQUE NOT NULL,
+    Dosage VARCHAR(50) NOT NULL,  -- Example: "500mg", "10ml"
+    Frequency VARCHAR(50) NOT NULL,  -- Example: "Every 6 hours"
+    ForSymptomID INT NOT NULL,
+    AllergyConsiderations TEXT,  -- Information on potential allergens
+    FOREIGN KEY (ForSymptomID) REFERENCES Symptoms(SymptomID) ON DELETE CASCADE
+);
+
+CREATE TABLE Doctors (
+    DoctorID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Specialization VARCHAR(100) NOT NULL,
+    Availability TEXT  -- Example: "Monday-Friday: 9 AM - 5 PM"
+);
+
+CREATE TABLE Appointments (
+    AppointmentID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT NOT NULL,
+    DoctorID INT NOT NULL,
+    AppointmentTime DATETIME NOT NULL,
+    Status ENUM('Pending', 'Completed', 'Canceled') NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID) ON DELETE CASCADE,
+    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID) ON DELETE CASCADE
+);
+
+CREATE TABLE Prescriptions (
+    PrescriptionID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT NOT NULL,
+    MedicineID INT NOT NULL,
+    Dosage VARCHAR(50) NOT NULL,
+    Frequency VARCHAR(50) NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE NOT NULL,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID) ON DELETE CASCADE,
+    FOREIGN KEY (MedicineID) REFERENCES Medicines(MedicineID) ON DELETE CASCADE
+);
+
+CREATE TABLE Allergies (
+    AllergyID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT NOT NULL,
+    Allergen VARCHAR(100) NOT NULL,  -- Example: "Penicillin", "Sulfa Drugs"
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE AppointmentWaitlist (
+    WaitlistID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT NOT NULL,
+    DiseaseID INT NOT NULL,
+    Status ENUM('Pending', 'Waiting for Doctor') NOT NULL,
+    ExpectedAppointmentTime DATETIME,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID) ON DELETE CASCADE,
+    FOREIGN KEY (DiseaseID) REFERENCES Diseases(DiseaseID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE UserPrompts (
+    PromptID INT AUTO_INCREMENT PRIMARY KEY,
+    UserPrompt TEXT NOT NULL,
+    SymptomID INT NOT NULL,  -- Changed from VARCHAR(255) to INT
+    FOREIGN KEY (SymptomID) REFERENCES Symptoms(SymptomID) ON DELETE CASCADE
+);
+
+CREATE TABLE UserPromptSymptoms (
+    PromptSymptomID INT AUTO_INCREMENT PRIMARY KEY,
+    PromptID INT NOT NULL,
+    SymptomID INT NOT NULL,
+    FOREIGN KEY (PromptID) REFERENCES UserPrompts(PromptID) ON DELETE CASCADE,
+    FOREIGN KEY (SymptomID) REFERENCES Symptoms(SymptomID) ON DELETE CASCADE
+);
+
+INSERT INTO Patients (Name, Age, Gender, ContactNumber, Email, Allergies) VALUES
+('Amit Sharma', 32, 'Male', '9876543210', 'amit.sharma@email.com', 'Penicillin'),
+('Sneha Verma', 27, 'Female', '9123456789', 'sneha.verma@email.com', 'None'),
+('Rajesh Kumar', 45, 'Male', '9988776655', 'rajesh.kumar@email.com', 'Sulfa Drugs');
+
+INSERT INTO Symptoms (SymptomName, Severity) VALUES
+('Fever', 'Mild'),
+('Cough', 'Mild'),
+('Headache', 'Mild'),
+('Acidity', 'Moderate'),
+('Stomach Pain', 'Moderate'),
+('Cuts', 'Mild'),
+('Asthma', 'Severe');
+
+INSERT INTO Diseases (DiseaseName, SymptomID, Severity) VALUES
+('Cold', 1, 'Mild'),
+('Flu', 2, 'Mild'),
+('Migraine', 3, 'Moderate'),
+('Gastritis', 4, 'Moderate'),
+('Food Poisoning', 5, 'Severe'),
+('Minor Injury', 6, 'Mild'),
+('Asthma Attack', 7, 'Severe');
+
+
+INSERT INTO Medicines (MedicineName, Dosage, Frequency, ForSymptomID, AllergyConsiderations) VALUES
+('Paracetamol', '500mg', 'Every 6 hours', 1, 'Avoid in liver disease'),
+('Cough Syrup', '10ml', 'Twice a day', 2, 'Contains sugar, avoid in diabetes'),
+('Aspirin', '100mg', 'Once a day', 3, 'Avoid if allergic to NSAIDs'),
+('Antacid Tablet', '1 tablet', 'After meals', 4, 'Contains aluminum, avoid in kidney disease'),
+('ORS Solution', 'As needed', 'After every loose motion', 5, 'No known allergy risk'),
+('Bandage', 'N/A', 'Apply as needed', 6, 'No known allergy risk'),
+('Inhaler', '2 puffs', 'As prescribed', 7, 'Check for steroid sensitivity');
+
+
+INSERT INTO Doctors (Name, Specialization, Availability) VALUES
+('Dr. Anil Kapoor', 'General Physician', 'Monday-Friday: 9 AM - 5 PM'),
+('Dr. Sunita Mehta', 'Pulmonologist', 'Monday-Saturday: 10 AM - 6 PM'),
+('Dr. Ramesh Gupta', 'Gastroenterologist', 'Tuesday-Thursday: 2 PM - 6 PM');
+
+INSERT INTO Appointments (PatientID, DoctorID, AppointmentTime, Status) VALUES
+(1, 1, '2025-02-05 10:00:00', 'Pending'),
+(2, 2, '2025-02-06 11:30:00', 'Pending'),
+(3, 3, '2025-02-07 15:45:00', 'Completed');
+
+
+INSERT INTO Prescriptions (PatientID, MedicineID, Dosage, Frequency, StartDate, EndDate) VALUES
+(1, 1, '500mg', 'Every 6 hours', '2025-02-05', '2025-02-07'),
+(2, 2, '10ml', 'Twice a day', '2025-02-06', '2025-02-08'),
+(3, 3, '100mg', 'Once a day', '2025-02-07', '2025-02-10');
+
+
+INSERT INTO Allergies (PatientID, Allergen) VALUES
+(1, 'Penicillin'),
+(3, 'Sulfa Drugs');
+
+INSERT INTO AppointmentWaitlist (PatientID, DiseaseID, Status, ExpectedAppointmentTime) VALUES
+(1, 7, 'Waiting for Doctor', '2025-02-06 14:00:00'),
+(2, 5, 'Pending', '2025-02-07 09:30:00');
+
+
+INSERT INTO UserPrompts (UserPrompt) VALUES
+('I have a fever and headache'),
+('I am suffering from cough'),
+('My stomach hurts and I have acidity'),
+('I feel weak and I have flu symptoms');
+
+INSERT INTO UserPrompts (UserPrompt, SymptomID) VALUES
+ ('I have a fever and headache', 1),
+ ('I am suffering from cough', 2),
+ ('My stomach hurts and I have acidity', 3),
+ ('I feel weak and I have flu symptoms', 4);
+ 
+ INSERT INTO UserPromptSymptoms (PromptID, SymptomID) VALUES
+(1, 1),  -- Fever
+(1, 3),  -- Headache
+(2, 2),  -- Cough
+(3, 4),  -- Acidity
+(3, 5),  -- Stomach Pain
+(4, 1),  -- Fever
+(4, 2);  -- Cough
+
+SELECT * FROM Symptoms WHERE SymptomName IN ('Fever', 'Headache');
+
+SELECT DiseaseName 
+FROM Diseases 
+WHERE SymptomID IN (
+    SELECT SymptomID FROM Symptoms WHERE SymptomName IN ('Fever', 'Headache')
+);
+
+SELECT MedicineName, Dosage, Frequency 
+FROM Medicines 
+WHERE ForSymptomID IN (
+    SELECT SymptomID FROM Symptoms WHERE SymptomName IN ('Fever', 'Headache')
+);
+
+
+SELECT * FROM Doctors 
+WHERE Specialization = 'General Physician' 
+AND Availability > NOW();
+
+
+INSERT INTO AppointmentWaitlist (PatientID, DiseaseID, Status, ExpectedAppointmentTime) 
+VALUES (1, (SELECT DiseaseID FROM Diseases WHERE DiseaseName = 'Flu'), 'Pending', '2024-02-04 10:00:00');
+
+select * from AppointmentWaitlist;
+SELECT * FROM Doctors;
+
+-- retrive user prompt and symptoms
+SELECT u.UserPrompt, s.SymptomName 
+FROM UserPrompts u
+JOIN UserPromptSymptoms ups ON u.PromptID = ups.PromptID
+JOIN Symptoms s ON ups.SymptomID = s.SymptomID
+WHERE u.UserPrompt = 'I have a fever and headache';
+
+
+-- final verification
+SELECT u.UserPrompt, d.DiseaseName, m.MedicineName, a.Status
+FROM UserPrompts u
+JOIN UserPromptSymptoms ups ON u.PromptID = ups.PromptID
+JOIN Symptoms s ON ups.SymptomID = s.SymptomID
+JOIN Diseases d ON s.SymptomID = d.SymptomID
+JOIN Medicines m ON s.SymptomID = m.ForSymptomID
+LEFT JOIN AppointmentWaitlist a ON d.DiseaseID = a.DiseaseID
+WHERE u.UserPrompt = 'I have a fever and headache';
+   
