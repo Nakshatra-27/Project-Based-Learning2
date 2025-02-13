@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify 
 import mysql.connector
 
 app = Flask(__name__)
@@ -8,7 +8,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="root1234",  # Replace with your password
-    database="healthassistant"
+    database="HealthAssistant1"
 )
 cursor = db.cursor(dictionary=True)
 
@@ -54,7 +54,7 @@ def fetch_prompt_symptoms():
         JOIN UserPromptSymptoms ups ON u.PromptID = ups.PromptID
         JOIN Symptoms s ON ups.SymptomID = s.SymptomID
         WHERE u.UserPrompt = %s
-    """
+       """
     cursor.execute(query, (user_prompt,))
     result = cursor.fetchall()
     return jsonify(result) if result else jsonify({"message": "No data found."}), 404
