@@ -8,7 +8,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="root1234",  # Replace with your password
-    database="HealthAssistant"
+    database="healthassistant"
 )
 cursor = db.cursor(dictionary=True)
 
