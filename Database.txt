@@ -1,5 +1,5 @@
-create database healthassistant;
-use healthassistant;
+create database HealthAssistant1;
+use HealthAssistant1;
 
 CREATE TABLE Patients (
     PatientID INT AUTO_INCREMENT PRIMARY KEY,
@@ -221,4 +221,3 @@ JOIN Diseases d ON s.SymptomID = d.SymptomID
 JOIN Medicines m ON s.SymptomID = m.ForSymptomID
 LEFT JOIN AppointmentWaitlist a ON d.DiseaseID = a.DiseaseID
 WHERE u.UserPrompt = 'I have a fever and headache';
-   
