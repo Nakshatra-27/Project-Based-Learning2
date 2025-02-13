@@ -1,5 +1,5 @@
-create database HealthAssistant;
-use HealthAssistant;
+create database healthassistant;
+use healthassistant;
 
 CREATE TABLE Patients (
     PatientID INT AUTO_INCREMENT PRIMARY KEY,
